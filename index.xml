@@ -1,0 +1,792 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>withstars - Everything that has a begin has an end.</title>
+    <link>http://withstars.cn/</link>
+    <description>Recent content on withstars - Everything that has a begin has an end.</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <copyright>withstars.cn</copyright>
+    <lastBuildDate>Thu, 01 Nov 2018 08:36:54 -0700</lastBuildDate>
+    
+        <atom:link href="http://withstars.cn/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>ELK介绍</title>
+      <link>http://withstars.cn/post/elk%E4%BB%8B%E7%BB%8D/</link>
+      <pubDate>Thu, 01 Nov 2018 08:36:54 -0700</pubDate>
+      
+      <guid>http://withstars.cn/post/elk%E4%BB%8B%E7%BB%8D/</guid>
+      
+        <description>&lt;p&gt;一.为什么用到ELK&lt;/p&gt;
+
+&lt;p&gt;一般我们需要进行日志分析场景：直接在日志文件中 grep、awk 就可以获得自己想要的信息。但在规模较大的场景中，此方法效率低下，面临问题包括日志量太大如何归档、文本搜索太慢怎么办、如何多维度查询。需要集中化的日志管理，所有服务器上的日志收集汇总。常见解决思路是建立集中式日志收集系统，将所有节点上的日志统一收集，管理，访问。&lt;/p&gt;
+
+&lt;p&gt;一般大型系统是一个分布式部署的架构，不同的服务模块部署在不同的服务器上，问题出现时，大部分情况需要根据问题暴露的关键信息，定位到具体的服务器和服务模块，构建一套集中式日志系统，可以提高定位问题的效率。&lt;/p&gt;
+
+&lt;p&gt;一个完整的集中式日志系统，需要包含以下几个主要特点：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;收集－能够采集多种来源的日志数据&lt;/li&gt;
+&lt;li&gt;传输－能够稳定的把日志数据传输到中央系统&lt;/li&gt;
+&lt;li&gt;存储－如何存储日志数据&lt;/li&gt;
+&lt;li&gt;分析－可以支持 UI 分析&lt;/li&gt;
+&lt;li&gt;警告－能够提供错误报告，监控机制&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;ELK提供了一整套解决方案，并且都是开源软件，之间互相配合使用，完美衔接，高效的满足了很多场合的应用。目前主流的一种日志系统。&lt;/p&gt;
+
+&lt;p&gt;二.ELK简介&lt;/p&gt;
+
+&lt;p&gt;ELK是三个开源软件的缩写，分别表示：Elasticsearch , Logstash, Kibana , 它们都是开源软件。新增了一个FileBeat，它是一个轻量级的日志收集处理工具(Agent)，Filebeat占用资源少，适合于在各个服务器上搜集日志后传输给Logstash，官方也推荐此工具。&lt;/p&gt;
+
+&lt;p&gt;Elasticsearch是个开源分布式搜索引擎，提供搜集、分析、存储数据三大功能。它的特点有：分布式，零配置，自动发现，索引自动分片，索引副本机制，restful风格接口，多数据源，自动搜索负载等。&lt;/p&gt;
+
+&lt;p&gt;Logstash 主要是用来日志的搜集、分析、过滤日志的工具，支持大量的数据获取方式。一般工作方式为c/s架构，client端安装在需要收集日志的主机上，server端负责将收到的各节点日志进行过滤、修改等操作在一并发往elasticsearch上去。&lt;/p&gt;
+
+&lt;p&gt;Kibana 也是一个开源和免费的工具，Kibana可以为 Logstash 和 ElasticSearch 提供的日志分析友好的 Web 界面，可以帮助汇总、分析和搜索重要数据日志。&lt;/p&gt;
+
+&lt;p&gt;Filebeat隶属于Beats。目前Beats包含四种工具：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;1. Packetbeat（搜集网络流量数据）
+
+&lt;ol&gt;
+&lt;li&gt;Topbeat（搜集系统、进程和文件系统级别的 CPU 和内存使用情况等数据）&lt;/li&gt;
+&lt;li&gt;Filebeat（搜集文件数据）&lt;/li&gt;
+&lt;li&gt;Winlogbeat（搜集 Windows 事件日志数据）&lt;/li&gt;
+&lt;/ol&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;三.ELK架构图&lt;/p&gt;
+
+&lt;p&gt;架构图一：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://withstars.cn/img/elk_1.png&#34; alt=&#34;架构图1&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;这是最简单的一种ELK架构方式。优点是搭建简单，易于上手。缺点是Logstash耗资源较大，运行占用CPU和内存高。另外没有消息队列缓存，存在数据丢失隐患。&lt;/p&gt;
+
+&lt;p&gt;此架构由Logstash分布于各个节点上搜集相关日志、数据，并经过分析、过滤后发送给远端服务器上的Elasticsearch进行存储。Elasticsearch将数据以分片的形式压缩存储并提供多种API供用户查询，操作。用户亦可以更直观的通过配置Kibana Web方便的对日志查询，并根据数据生成报表。&lt;/p&gt;
+
+&lt;p&gt;架构图二：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://withstars.cn/img/elk_2.png&#34; alt=&#34;架构图2&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;此种架构引入了消息队列机制，位于各个节点上的Logstash Agent先将数据/日志传递给Kafka（或者Redis），并将队列中消息或数据间接传递给Logstash，Logstash过滤、分析后将数据传递给Elasticsearch存储。最后由Kibana将日志和数据呈现给用户。因为引入了Kafka（或者Redis）,所以即使远端Logstash server因故障停止运行，数据将会先被存储下来，从而避免数据丢失。&lt;/p&gt;
+
+&lt;p&gt;架构图三：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://withstars.cn/img/elk_3.png&#34; alt=&#34;架构图3&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;此种架构将收集端logstash替换为beats，更灵活，消耗资源更少，扩展性更强。同时可配置Logstash 和Elasticsearch 集群用于支持大集群系统的运维日志数据监控和查询。&lt;/p&gt;
+
+&lt;p&gt;四.Filebeat工作原理&lt;/p&gt;
+
+&lt;p&gt;Filebeat由两个主要组件组成：prospectors 和 harvesters。这两个组件协同工作将文件变动发送到指定的输出中。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://withstars.cn/img/elk_4.png&#34; alt=&#34;Filebeat工作原理&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Harvester（收割机）：&lt;/strong&gt;负责读取单个文件内容。每个文件会启动一个Harvester，每个Harvester会逐行读取各个文件，并将文件内容发送到制定输出中。Harvester负责打开和关闭文件，意味在Harvester运行的时候，文件描述符处于打开状态，如果文件在收集中被重命名或者被删除，Filebeat会继续读取此文件。所以在Harvester关闭之前，磁盘不会被释放。默认情况filebeat会保持文件打开的状态，直到达到&lt;a href=&#34;https://www.elastic.co/guide/en/beats/filebeat/5.5/configuration-filebeat-options.html#close-inactive&#34;&gt;&lt;code&gt;close_inactive&lt;/code&gt;&lt;/a&gt;（如果此选项开启，filebeat会在指定时间内将不再更新的文件句柄关闭，时间从harvester读取最后一行的时间开始计时。若文件句柄被关闭后，文件发生变化，则会启动一个新的harvester。关闭文件句柄的时间不取决于文件的修改时间，若此参数配置不当，则可能发生日志不实时的情况，由scan_frequency参数决定，默认10s。Harvester使用内部时间戳来记录文件最后被收集的时间。例如：设置5m，则在Harvester读取文件的最后一行之后，开始倒计时5分钟，若5分钟内文件无变化，则关闭文件句柄。默认5m）。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Prospector（勘测者）：&lt;/strong&gt;负责管理Harvester并找到所有读取源。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;filebeat.prospectors:
+- input_type: log
+  paths:
+    - /apps/logs/*/info.log
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Prospector会找到/apps/logs/*目录下的所有info.log文件，并为每个文件启动一个Harvester。Prospector会检查每个文件，看Harvester是否已经启动，是否需要启动，或者文件是否可以忽略。若Harvester关闭，只有在文件大小发生变化的时候Prospector才会执行检查。只能检测本地的文件。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Filebeat如何记录文件状态：&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;将文件状态记录在文件中（默认在/var/lib/filebeat/registry）。此状态可以记住Harvester收集文件的偏移量。若连接不上输出设备，如ES等，filebeat会记录发送前的最后一行，并再可以连接的时候继续发送。Filebeat在运行的时候，Prospector状态会被记录在内存中。Filebeat重启的时候，利用registry记录的状态来进行重建，用来还原到重启之前的状态。每个Prospector会为每个找到的文件记录一个状态，对于每个文件，Filebeat存储唯一标识符以检测文件是否先前被收集。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Filebeat如何保证事件至少被输出一次：&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Filebeat之所以能保证事件至少被传递到配置的输出一次，没有数据丢失，是因为filebeat将每个事件的传递状态保存在文件中。在未得到输出方确认时，filebeat会尝试一直发送，直到得到回应。若filebeat在传输过程中被关闭，则不会再关闭之前确认所有时事件。任何在filebeat关闭之前为确认的时间，都会在filebeat重启之后重新发送。这可确保至少发送一次，但有可能会重复。可通过设置&lt;a href=&#34;https://www.elastic.co/guide/en/beats/filebeat/5.5/configuration-global-options.html#shutdown-timeout&#34;&gt;&lt;code&gt;shutdown_timeout&lt;/code&gt;&lt;/a&gt; 参数来设置关闭之前的等待事件回应的时间（默认禁用）。&lt;/p&gt;
+
+&lt;p&gt;五.Logstash工作原理&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://withstars.cn/img/elk_5.png&#34; alt=&#34;Logstash工作原理&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Logstash事件处理有三个阶段：inputs → filters → outputs。是一个接收，处理，转发日志的工具。支持系统日志，webserver日志，错误日志，应用日志，总之包括所有可以抛出来的日志类型。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Input：输入数据到logstash。&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;一些常用的输入为：&lt;/p&gt;
+
+&lt;p&gt;file：从文件系统的文件中读取，类似于tial -f命令&lt;/p&gt;
+
+&lt;p&gt;syslog：在514端口上监听系统日志消息，并根据RFC3164标准进行解析&lt;/p&gt;
+
+&lt;p&gt;redis：从redis service中读取&lt;/p&gt;
+
+&lt;p&gt;beats：从filebeat中读取&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Filters：数据中间处理，对数据进行操作。&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;一些常用的过滤器为：&lt;/p&gt;
+
+&lt;p&gt;grok：解析任意文本数据，Grok 是 Logstash 最重要的插件。它的主要作用就是将文本格式的字符串，转换成为具体的结构化的数据，配合正则表达式使用。内置120多个解析语法。&lt;/p&gt;
+
+&lt;p&gt;官方提供的grok表达式：&lt;a href=&#34;https://github.com/logstash-plugins/logstash-patterns-core/tree/master/patterns&#34;&gt;https://github.com/logstash-plugins/logstash-patterns-core/tree/master/patterns&lt;/a&gt;
+grok在线调试：&lt;a href=&#34;https://grokdebug.herokuapp.com/&#34;&gt;https://grokdebug.herokuapp.com/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;mutate：对字段进行转换。例如对字段进行删除、替换、修改、重命名等。&lt;/p&gt;
+
+&lt;p&gt;drop：丢弃一部分events不进行处理。&lt;/p&gt;
+
+&lt;p&gt;clone：拷贝 event，这个过程中也可以添加或移除字段。&lt;/p&gt;
+
+&lt;p&gt;geoip：添加地理信息(为前台kibana图形化展示使用)&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Outputs：outputs是logstash处理管道的最末端组件。&lt;/strong&gt;一个event可以在处理过程中经过多重输出，但是一旦所有的outputs都执行结束，这个event也就完成生命周期。&lt;/p&gt;
+
+&lt;p&gt;一些常见的outputs为：&lt;/p&gt;
+
+&lt;p&gt;elasticsearch：可以高效的保存数据，并且能够方便和简单的进行查询。&lt;/p&gt;
+
+&lt;p&gt;file：将event数据保存到文件中。&lt;/p&gt;
+
+&lt;p&gt;graphite：将event数据发送到图形化组件中，一个很流行的开源存储图形化展示的组件。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Codecs：codecs 是基于数据流的过滤器，它可以作为input，output的一部分配置&lt;/strong&gt;。Codecs可以帮助你轻松的分割发送过来已经被序列化的数据。&lt;/p&gt;
+
+&lt;p&gt;一些常见的codecs：&lt;/p&gt;
+
+&lt;p&gt;json：使用json格式对数据进行编码/解码。&lt;/p&gt;
+
+&lt;p&gt;multiline：将汇多个事件中数据汇总为一个单一的行。比如：java异常信息和堆栈信息。&lt;/p&gt;
+
+&lt;p&gt;六.ELK官方文档&lt;/p&gt;
+
+&lt;p&gt;Filebeat：&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://www.elastic.co/cn/products/beats/filebeat&#34;&gt;https://www.elastic.co/cn/products/beats/filebeat&lt;/a&gt;
+&lt;a href=&#34;https://www.elastic.co/guide/en/beats/filebeat/5.6/index.html&#34;&gt;https://www.elastic.co/guide/en/beats/filebeat/5.6/index.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Logstash：
+&lt;a href=&#34;https://www.elastic.co/cn/products/logstash&#34;&gt;https://www.elastic.co/cn/products/logstash&lt;/a&gt;
+&lt;a href=&#34;https://www.elastic.co/guide/en/logstash/5.6/index.html&#34;&gt;https://www.elastic.co/guide/en/logstash/5.6/index.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Kibana:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://www.elastic.co/cn/products/kibana&#34;&gt;https://www.elastic.co/cn/products/kibana&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://www.elastic.co/guide/en/kibana/5.5/index.html&#34;&gt;https://www.elastic.co/guide/en/kibana/5.5/index.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Elasticsearch：
+&lt;a href=&#34;https://www.elastic.co/cn/products/elasticsearch&#34;&gt;https://www.elastic.co/cn/products/elasticsearch&lt;/a&gt;
+&lt;a href=&#34;https://www.elastic.co/guide/en/elasticsearch/reference/5.6/index.html&#34;&gt;https://www.elastic.co/guide/en/elasticsearch/reference/5.6/index.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;elasticsearch中文社区：
+&lt;a href=&#34;https://elasticsearch.cn/&#34;&gt;https://elasticsearch.cn/&lt;/a&gt;&lt;/p&gt;
+</description>
+      
+    </item>
+    
+    <item>
+      <title>Java GC 垃圾收集器</title>
+      <link>http://withstars.cn/post/java-gc-%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8/</link>
+      <pubDate>Thu, 01 Nov 2018 08:36:54 -0700</pubDate>
+      
+      <guid>http://withstars.cn/post/java-gc-%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8/</guid>
+      
+        <description>&lt;p&gt;一.HotSpot这个虚拟机所包含的所有收集器&lt;/p&gt;
+
+&lt;p&gt;下图展示了7种作用于不同分代的收集器，如果两个收集器之间存在连线，那说明它们可以搭配使用。虚拟机所处的区域说明它是属于新生代收集器还是老年代收集器。我们必须明确一个观点：没有最好的垃圾收集器，更加没有万能的收集器，只能选择对具体应用最合适的收集器。这也是HotSpot为什么要实现这么多收集器的原因。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://withstars.cn/img/java_gc_1.png&#34; alt=&#34;Hotspot垃圾收集器&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;1、Serial收集器&lt;/p&gt;
+
+&lt;p&gt;​    最基本、发展历史最久的收集器，这个收集器是一个采用&lt;strong&gt;复制算法的单线程&lt;/strong&gt;的收集器，单线程一方面意味着它只会使用一个CPU或一条线程去完成垃圾收集工作，另一方面也意味着它进行垃圾收集时必须暂停其他线程的所有工作，直到它收集结束为止。后者意味着，在用户不可见的情况下要把用户正常工作的线程全部停掉，这对很多应用是难以接受的。不过实际上到目前为止，&lt;strong&gt;Serial收集器依然是虚拟机运行在Client模式下的默认新生代收集器&lt;/strong&gt;，因为它简单而高效。用户桌面应用场景中，分配给虚拟机管理的内存一般来说不会很大，收集几十兆甚至一两百兆的新生代停顿时间在几十毫秒最多一百毫秒，只要不是频繁发生，这点停顿是完全可以接受的。Serial收集器运行过程如下图所示：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://withstars.cn/img/java_gc_2.png&#34; alt=&#34;Serial/Serial Old收集器运行示意图&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;说明：1. 需要STW（Stop The World），停顿时间长。2. 简单高效，对于单个CPU环境而言，Serial收集器由于没有线程交互开销，可以获取最高的单线程收集效率。&lt;/p&gt;
+
+&lt;p&gt;2.ParNew收集器&lt;/p&gt;
+
+&lt;p&gt;​     &lt;strong&gt;ParNew收集器其实就是Serial收集器的多线程版本&lt;/strong&gt;，除了使用多条线程进行垃圾收集外，其余行为和Serial收集器完全一样，包括使用的也是&lt;strong&gt;复制算法&lt;/strong&gt;。ParNew收集器除了多线程以外和Serial收集器并没有太多创新的地方，&lt;strong&gt;但是它却是Server模式下的虚拟机首选的新生代收集器&lt;/strong&gt;，其中有一个很重要的和性能无关的原因是，除了Serial收集器外，目前只有它能与CMS收集器配合工作（看图）。CMS收集器是一款几乎可以认为有划时代意义的垃圾收集器，因为它第一次实现了让垃圾收集线程与用户线程基本上同时工作。ParNew收集器在单CPU的环境中绝对不会有比Serial收集器更好的效果，甚至由于线程交互的开销，该收集器在两个CPU的环境中都不能百分之百保证可以超越Serial收集器。当然，随着可用CPU数量的增加，它对于GC时系统资源的有效利用还是很有好处的。它默认开启的收集线程数与CPU数量相同，在CPU数量非常多的情况下，可以使用-XX:ParallelGCThreads参数来限制垃圾收集的线程数。ParNew收集器运行过程如下图所示：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://withstars.cn/img/java_gc_3.png&#34; alt=&#34;ParNew/Serial Old收集器运行示意图&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;3、Parallel Scavenge收集器&lt;/p&gt;
+
+&lt;p&gt;​     Parallel Scavenge收集器也是一个新生代收集器，也是用复制算法的收集器，也是并行的多线程收集器，但是它的特点是它的关注点和其他收集器不同。介绍这个收集器主要还是介绍&lt;strong&gt;吞吐量&lt;/strong&gt;的概念。&lt;strong&gt;CMS等收集器的关注点是尽可能缩短垃圾收集时用户线程的停顿时间，而Parallel Scavenge收集器的目标则是打到一个可控制的吞吐量&lt;/strong&gt;。所谓吞吐量的意思就是CPU用于运行用户代码时间与CPU总消耗时间的比值，即&lt;strong&gt;吞吐量=运行用户代码时间/（运行用户代码时间+垃圾收集时间）&lt;/strong&gt;，虚拟机总运行100分钟，垃圾收集1分钟，那吞吐量就是99%。另外，&lt;strong&gt;Parallel Scavenge收集器是虚拟机运行在Server模式下的默认垃圾收集器&lt;/strong&gt;。&lt;/p&gt;
+
+&lt;p&gt;​     停顿时间短适合需要与用户交互的程序，良好的响应速度能提升用户体验；高吞吐量则可以高效率利用CPU时间，尽快完成运算任务，主要适合在后台运算而不需要太多交互的任务。&lt;/p&gt;
+
+&lt;p&gt;​     虚拟机提供了-XX:MaxGCPauseMillis和-XX:GCTimeRatio两个参数来精确控制最大垃圾收集停顿时间和吞吐量大小。不过不要以为前者越小越好，GC停顿时间的缩短是以牺牲吞吐量和新生代空间换取的。由于与吞吐量关系密切，&lt;strong&gt;Parallel Scavenge收集器也被称为“吞吐量优先收集器”&lt;/strong&gt;。Parallel Scavenge收集器有一个-XX:+UseAdaptiveSizePolicy参数，这是一个开关参数，这个参数打开之后，就不需要手动指定新生代大小、Eden区和Survivor参数等细节参数了，虚拟机会根据当前系统的运行情况手机性能监控信息，动态调整这些参数以提供最合适的停顿时间或者最大的吞吐量。&lt;strong&gt;如果对于垃圾收集器运作原理不太了解，以至于在优化比较困难的时候，使用Parallel Scavenge收集器配合自适应调节策略，把内存管理的调优任务交给虚拟机去完成将是一个不错的选择&lt;/strong&gt;。&lt;/p&gt;
+
+&lt;p&gt;4、Serial Old收集器&lt;/p&gt;
+
+&lt;p&gt;Serial收集器的老年代版本，同样是一个&lt;strong&gt;单线程收集器&lt;/strong&gt;，使用“&lt;strong&gt;标记-整理算法&lt;/strong&gt;”，这个收集器的主要意义也是在于给Client模式下的虚拟机使用。&lt;/p&gt;
+
+&lt;p&gt;5、Parallel Old收集器&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Parallel Scavenge收集器的老年代版本，使用多线程和“标记-整理”算法&lt;/strong&gt;。这个收集器在JDK 1.6之后的出现，“吞吐量优先收集器”终于有了比较名副其实的应用组合，在注重吞吐量以及CPU资源敏感的场合，都可以优先考虑Parallel Scavenge收集器+Parallel Old收集器的组合。运行过程如下图所示：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://withstars.cn/img/java_gc_4.png&#34; alt=&#34;Parallel Scavenge/Parallel Old收集器运行示意图&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;6、CMS收集器&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;CMS（Conrrurent Mark Sweep）收集器是以获取最短回收停顿时间为目标的收集器。使用标记 - 清除算法&lt;/strong&gt;，收集过程分为如下四步：&lt;/p&gt;
+
+&lt;p&gt;(1). 初始标记，标记GCRoots能直接关联到的对象，时间很短。&lt;/p&gt;
+
+&lt;p&gt;(2). 并发标记，进行GCRoots Tracing（可达性分析）过程，时间很长。&lt;/p&gt;
+
+&lt;p&gt;(3). 重新标记，修正并发标记期间因用户程序继续运作而导致标记产生变动的那一部分对象的标记记录，时间较长。&lt;/p&gt;
+
+&lt;p&gt;(4). 并发清除，回收内存空间，时间很长。&lt;/p&gt;
+
+&lt;p&gt;其中，并发标记与并发清除两个阶段耗时最长，但是可以与用户线程并发执行。运行过程如下图所示:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://withstars.cn/img/java_gc_5.png&#34; alt=&#34;Concurrent Mark Sweep收集器运行示意图&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;说明：1. 对CPU资源非常敏感，可能会导致应用程序变慢，吞吐率下降。2. 无法处理浮动垃圾，因为在并发清理阶段用户线程还在运行，自然就会产生新的垃圾，而在此次收集中无法收集他们，只能留到下次收集，这部分垃圾为浮动垃圾，同时，由于用户线程并发执行，所以需要预留一部分老年代空间提供并发收集时程序运行使用。3. 由于采用的标记 - 清除算法，会产生大量的内存碎片，不利于大对象的分配，可能会提前触发一次Full GC。虚拟机提供了-XX:+UseCMSCompactAtFullCollection参数来进行碎片的合并整理过程，这样会使得停顿时间变长，虚拟机还提供了一个参数配置，-XX:+CMSFullGCsBeforeCompaction，用于设置执行多少次不压缩的Full GC后，接着来一次带压缩的GC。&lt;/p&gt;
+
+&lt;p&gt;7、G1收集器&lt;/p&gt;
+
+&lt;p&gt;G1是目前技术发展的最前沿成果之一，HotSpot开发团队赋予它的使命是未来可以替换掉JDK1.5中发布的CMS收集器。与其他GC收集器相比，G1收集器有以下特点：&lt;/p&gt;
+
+&lt;p&gt;(1). 并行和并发。使用多个CPU来缩短Stop The World停顿时间，与用户线程并发执行。&lt;/p&gt;
+
+&lt;p&gt;(2). 分代收集。独立管理整个堆，但是能够采用不同的方式去处理新创建对象和已经存活了一段时间、熬过多次GC的旧对象，以获取更好的收集效果。&lt;/p&gt;
+
+&lt;p&gt;(3). 空间整合。基于标记 - 整理算法，无内存碎片产生。&lt;/p&gt;
+
+&lt;p&gt;(4). 可预测的停顿。能简历可预测的停顿时间模型，能让使用者明确指定在一个长度为M毫秒的时间片段内，消耗在垃圾收集上的时间不得超过N毫秒。&lt;/p&gt;
+
+&lt;p&gt;​     在G1之前的垃圾收集器，收集的范围都是整个新生代或者老年代，而G1不再是这样。使用G1收集器时，Java堆的内存布局与其他收集器有很大差别，它将整个Java堆划分为多个大小相等的独立区域（Region），虽然还保留有新生代和老年代的概念，但新生代和老年代不再是物理隔离的了，它们都是一部分（可以不连续）Region的集合。&lt;/p&gt;
+</description>
+      
+    </item>
+    
+    <item>
+      <title>MySQL 优化</title>
+      <link>http://withstars.cn/post/mysql%E4%BC%98%E5%8C%96/</link>
+      <pubDate>Sat, 10 Mar 2018 08:36:54 -0700</pubDate>
+      
+      <guid>http://withstars.cn/post/mysql%E4%BC%98%E5%8C%96/</guid>
+      
+        <description>
+
+&lt;h4 id=&#34;优化sql语句的一般步骤&#34;&gt;优化SQL语句的一般步骤&lt;/h4&gt;
+
+&lt;ol&gt;
+&lt;li&gt;通过show status 命令了解各种SQL执行的频率&lt;/li&gt;
+&lt;li&gt;通过慢查询日志定位执行效率较低的SQL语句&lt;/li&gt;
+&lt;li&gt;通过EXPLAIN分析低效SQL的执行计划&lt;/li&gt;
+&lt;li&gt;通过show profile 分析SQL&lt;/li&gt;
+&lt;li&gt;通过trace分析优化器如何选择执行计划&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h4 id=&#34;定期优化表&#34;&gt;定期优化表&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;optimize table table_name&lt;/code&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;常见sql的优化&#34;&gt;常见SQL的优化&lt;/h4&gt;
+
+&lt;h5 id=&#34;大批量插入数据的优化&#34;&gt;大批量插入数据的优化&lt;/h5&gt;
+
+&lt;p&gt;对于MyISAM存储引擎的表,通过DISABLE KEYS和ENABLE KEYS打开或关闭MyISAM表非唯一索引的更新&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;ALTER TABLE tab1_name DISABLE KEYS;
+loading data infile &#39;&#39; into table table_name;
+ALTER TABLE tb1_name ENABLE KEYS;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;InnoDB类型的表
+(1) 因为InnoDB类型的表是按照主键的顺序保存的，所以将导入的数据按照主键的顺序排列可以提高导入数据的效率
+(2) 在导入数据前执行 SET UNIQUE_CHECKS=0,关闭唯一性校验
+(3) 临时关闭自动提交，SET AUTOCOMMIT=0,导入之后再打开&lt;/p&gt;
+
+&lt;h5 id=&#34;优化order-by语句&#34;&gt;优化ORDER BY语句&lt;/h5&gt;
+
+&lt;p&gt;MySQL中两种排序方式
+1. 通过有序索引顺序扫描直接返回有序数据
+2. 通过对返回数据进行排序&lt;/p&gt;
+
+&lt;p&gt;优化目标尽量减少额外的排序，通过索引直接返回有序数据WHERE条件和ORDER BY使用相同的索引，并且ORDER BY的顺序和索引顺序相同，并且ORDER BY的字段都是升序或降序，否则肯定需要额外的排序操作&lt;/p&gt;
+
+&lt;h5 id=&#34;优化group-by语句&#34;&gt;优化GROUP BY语句&lt;/h5&gt;
+
+&lt;p&gt;默认情况下，Mysql对所有GROUP BY col1,col2的字段进行排序,这与查询中指定ORDER BY col,col2类似因此，如果显式包括一个包含相同列的ORDER BY子句，则对MySQL的实际执行性能没什么影响如果查询包括GROUP BY但用户想要避免排序结果的消耗，则可以指定ORDER BY NULL禁止排序&lt;/p&gt;
+
+&lt;h5 id=&#34;优化嵌套查询&#34;&gt;优化嵌套查询&lt;/h5&gt;
+
+&lt;p&gt;使用连接(join)代替子SELECT&lt;/p&gt;
+
+&lt;h5 id=&#34;优化or条件&#34;&gt;优化OR条件&lt;/h5&gt;
+
+&lt;p&gt;对于含有OR的查询语句，如果要利用索引，则OR之间的每个条件列都必须要使用到索引，如果没有索引，则应该考虑增加索引&lt;/p&gt;
+
+&lt;h5 id=&#34;优化分页查询&#34;&gt;优化分页查询&lt;/h5&gt;
+
+&lt;p&gt;方案1. 再索引上完成排序分页的操作，最后根据主键关联回原表查询所需要的其它列内容。
+方案2. 把Limit查询转换成某个位置的查询&lt;/p&gt;
+
+&lt;h5 id=&#34;开启查询缓存&#34;&gt;开启查询缓存&lt;/h5&gt;
+
+&lt;p&gt;&lt;code&gt;$ show variables like &#39;%query_cache%&#39;;&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;query_cache_type&lt;/code&gt; 为 ON 表示已经开启如果不是ON，修改配置文件以开启查询缓存：&lt;code&gt;vi /etc/my.cnf&lt;/code&gt;
+[mysqld]中添加：
+&lt;code&gt;query_cache_size = 20M&lt;/code&gt;
+&lt;code&gt;query_cache_type = ON&lt;/code&gt;
+重启mysql服务：&lt;code&gt;service mysql restart&lt;/code&gt;
+查看缓存使用情况：&lt;code&gt;mysql&amp;gt; show status like &#39;qcache%&#39;;&lt;/code&gt;&lt;/p&gt;
+</description>
+      
+    </item>
+    
+    <item>
+      <title>MySQL 备份</title>
+      <link>http://withstars.cn/post/mysql%E5%A4%87%E4%BB%BD/</link>
+      <pubDate>Wed, 28 Feb 2018 08:36:54 -0700</pubDate>
+      
+      <guid>http://withstars.cn/post/mysql%E5%A4%87%E4%BB%BD/</guid>
+      
+        <description>
+
+&lt;h4 id=&#34;备份应该备份什么&#34;&gt;备份应该备份什么&lt;/h4&gt;
+
+&lt;p&gt;备份数据 + 配置文件 + 日志（二进制日志，事务日志）&lt;/p&gt;
+
+&lt;h4 id=&#34;应该进行热备份还是温备份-或者冷备份&#34;&gt;应该进行热备份还是温备份，或者冷备份&lt;/h4&gt;
+
+&lt;p&gt;一般是进行热备份。但是热备份属于在线备份，备份时候数据库还在读写状态，热备份是比较复杂的，要保证备份的数据是可用的，MyISAM存储引擎无法进行热备份只能用快照进行备份，否则进只能温备份，innodb可以热备份。&lt;/p&gt;
+
+&lt;p&gt;离线备份就靠谱，提供在线服务的数据库如果需要停下来进行备份，可以借助一些技术手段，比如为我们的数据库提供 从服务器，需要备份时候把从服务器停下来，然后在备份，再启动，启动之后从服务器会自动将主服务器那里将停止服务之前的数据进行同步过来。因此需要借助于mysql主从架构来实现。&lt;/p&gt;
+
+&lt;h4 id=&#34;应该进行物理备份还是逻辑备份&#34;&gt;应该进行物理备份还是逻辑备份&lt;/h4&gt;
+
+&lt;p&gt;物理备份直接复制数据文件，如果这个文件跟我们操作系统的文件系统无关的话，我们的数据文件跨平台性就很强，移植性也好但是有些存储引擎的数据文件可能会和操作系统的文件系统有关系，因此会导致移植能力不强，但是优势是备份速度很快&lt;/p&gt;
+
+&lt;p&gt;逻辑备份是依靠mysql进程将我们的数据从表中读取出来。并另存为文本文件的，因此这个逻辑备份过程需要mysql服务器进程参与的，备份速度慢，逻辑备份由于是直接导出到文件里面保存的所有可能会丢失数据的浮点数精度。优势，可以使用文本编辑器对数据进行处理，可移植能力也强，还可以跨mysql服务器版本&lt;/p&gt;
+
+&lt;h4 id=&#34;备份策略&#34;&gt;备份策略&lt;/h4&gt;
+
+&lt;p&gt;完全 +增量
+完全 + 差异&lt;/p&gt;
+
+&lt;h4 id=&#34;多长时间进行一次备份&#34;&gt;多长时间进行一次备份&lt;/h4&gt;
+
+&lt;p&gt;如果数据变化量不是很大，每天变化也不是特别频繁，我们可以一周做一次完全，每天做一次增量或者差异到底多长时间进行一次备份取决于你数据库数据变化量，以及你所能忍受的还原时长，使用物理还是逻辑备份取决于你的需要&lt;/p&gt;
+
+&lt;h4 id=&#34;设计合适的备份策略&#34;&gt;设计合适的备份策略&lt;/h4&gt;
+
+&lt;p&gt;针对不同的场景下, 我们应该制定不同的备份策略对数据库进行备份, 一般情况下, 备份策略一般为以下几种
+直接cp,tar复制数据库文件
+mysqldump+复制BIN LOGS
+lvm2快照+复制BIN LOGS
+xtrabackup&lt;/p&gt;
+
+&lt;p&gt;以上的几种解决方案分别针对于不同的场景&lt;/p&gt;
+
+&lt;p&gt;如果数据量较小, 可以使用第一种方式, 直接复制数据库文件&lt;/p&gt;
+
+&lt;p&gt;如果数据量还行, 可以使用第二种方式, 先使用mysqldump对数据库进行完全备份, 然后定期备份BINARY LOG达到增量备份的效果&lt;/p&gt;
+
+&lt;p&gt;如果数据量一般, 而又不过分影响业务运行, 可以使用第三种方式, 使用lvm2的快照对数据文件进行备份, 而后定期备份BINARY LOG达到增量备份的效果&lt;/p&gt;
+
+&lt;p&gt;如果数据量很大, 而又不过分影响业务运行, 可以使用第四种方式, 使用xtrabackup进行完全备份后, 定期使用xtrabackup进行增量备份或差异备份&lt;/p&gt;
+
+&lt;h5 id=&#34;使用cp进行备份&#34;&gt;使用cp进行备份&lt;/h5&gt;
+
+&lt;p&gt;查看数据库的信息&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;mysql&amp;gt; SHOW DATABASES; 
+mysql&amp;gt; USE employees;
+mysql&amp;gt; SHOW TABLES;  
+mysql&amp;gt; SELECT COUNT(*) FROM employees; 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;向数据库施加读锁&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;mysql&amp;gt; FLUSH TABLES WITH READ LOCK;    #向所有表施加读锁
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;备份数据文件&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[root@node1 ~]# mkdir /backup   #创建文件夹存放备份数据库文件
+[root@node1 ~]# cp -a /var/lib/mysql/* /backup     #保留权限的拷贝源数据文件
+[root@node1 ~]# ls /backup   #查看目录下的文件
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;模拟数据丢失并恢复&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[root@node1 ~]# rm -rf /var/lib/mysql/*    #删除数据库的所有文件
+[root@node1 ~]# service mysqld restart   #重启MySQL, 如果是编译安装的应该不能启动, 如果rpm安装则会重新初始化数据库
+mysql&amp;gt; SHOW DATABASES;    #因为我们是rpm安装的, 连接到MySQL进行查看, 发现数据丢失了！
+
+[root@node1 ~]# rm -rf /var/lib/mysql/*    #这一步可以不做
+[root@node1 ~]# cp -a /backup/* /var/lib/mysql/    #将备份的数据文件拷贝回去
+[root@node1 ~]# service mysqld restart  #重启MySQL
+
+mysql&amp;gt; SHOW DATABASES;    #数据库已恢复
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h5 id=&#34;使用mysqldump-复制binary-log备份&#34;&gt;使用mysqldump+复制BINARY LOG备份&lt;/h5&gt;
+
+&lt;p&gt;我们通过mysqldump进行一次完全备份, 再修改表中的数据, 然后再通过binary log进行恢复 二进制日志需要在mysql配置文件中添加 log_bin=on 开启&lt;/p&gt;
+
+&lt;p&gt;mysqldump命令介绍&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;shell&amp;gt; mysqldump [options] db_name [tbl_name ...]    恢复需要手动CRATE DATABASES
+shell&amp;gt; mysqldump [options] --databases db_name ...   恢复不需要手动创建数据库
+shell&amp;gt; mysqldump [options] --all-databases           恢复不需要手动创建数据库
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;其他选项:
+     -E, &amp;ndash;events: 备份事件调度器
+     -R, &amp;ndash;routines: 备份存储过程和存储函数
+     &amp;ndash;triggers: 备份表的触发器; &amp;ndash;skip-triggers
+     &amp;ndash;master-date[=value]&lt;br /&gt;
+         1: 记录为CHANGE MASTER TO 语句、语句不被注释
+         2: 记录为注释的CHANGE MASTER TO语句
+         基于二进制还原只能全库还原&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; --flush-logs: 日志滚动
+     锁定表完成后执行日志滚动
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;查看数据库的信息&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;mysql&amp;gt; SHOW DATABASES;
+mysql&amp;gt; USE employees;
+mysql&amp;gt; SHOW TABLES; 
+mysql&amp;gt; SELECT COUNT(*) FROM employees; 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;使用mysqldump备份数据库&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;mysql -uroot -p -e &#39;SHOW MASTER STATUS&#39;   #查看当前二进制文件的状态, 并记录下position的数字
+[root@node1 ~]# mysqldump --all-databases --lock-all-tables  &amp;gt; backup.sql   #备份数据库到backup.sql文件中
+mysql&amp;gt; CREATE DATABASE TEST1;   #创建一个数据库
+mysql&amp;gt; SHOW MASTER STATUS;   #记下现在的position
+
+[root@node1 ~]# cp /var/lib/mysql/mysql-bin.000003 /root  #备份二进制文件
+[root@node1 ~]# service mysqld stop   #停止MySQL
+[root@node1 ~]# rm -rf /var/lib/mysql/*   #删除所有的数据文件
+[root@node1 ~]# service mysqld start    #启动MySQL, 如果是编译安装的应该不能启动(需重新初始化), 如果rpm安装则会重新初始化数据库
+
+mysql&amp;gt; SHOW DATABASES;   #查看数据库, 数据丢失!
+mysql&amp;gt; SET sql_log_bin=OFF;   #暂时先将二进制日志关闭  
+
+mysql&amp;gt; source backup.sql  #恢复数据，所需时间根据数据库时间大小而定
+mysql&amp;gt; SET sql_log_bin=ON; 开启二进制日志
+mysql&amp;gt; SHOW DATABASES;   #数据库恢复, 但是缺少TEST1
+[root@node1 ~]# mysqlbinlog --start-position=106 --stop-position=191 mysql-bin.000003 | mysql employees #通过二进制日志增量恢复数据
+mysql&amp;gt; SHOW DATABASES;    #现在TEST1出现了！
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h5 id=&#34;使用lvm2快照备份数据&#34;&gt;使用lvm2快照备份数据&lt;/h5&gt;
+
+&lt;p&gt;做实验之前我们先回顾一下lvm2-snapshot的知识
+LVM快照简单来说就是将所快照源分区一个时间点所有文件的元数据进行保存，如果源文件没有改变，那么访问快照卷的相应文件则直接指向源分区的源文件，如果源文件发生改变，则快照卷中与之对应的文件不会发生改变。快照卷主要用于辅助备份文件。&lt;/p&gt;
+
+&lt;p&gt;部署lvm环境
+添加硬盘; 这里我们直接实现SCSI硬盘的热插拔, 首先在虚拟机中添加一块硬盘, 不重启&lt;/p&gt;
+
+&lt;p&gt;查看数据库的信息&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;mysql&amp;gt; SHOW DATABASES; 
+mysql&amp;gt; USE employees;
+mysql&amp;gt; SHOW TABLES;
+mysql&amp;gt; SELECT COUNT(*) FROM employees; 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;创建快照卷并备份&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;mysql&amp;gt; FLUSH TABLES WITH READ LOCK;     #锁定所有表
+[root@node1 lvm_data]# lvcreate -L 1G -n mydata-snap -p r -s /dev/mapper/myvg-mydata   #创建快照卷
+mysql&amp;gt; UNLOCK TABLES;  #解锁所有表
+[root@node1 lvm_data]# mkdir /lvm_snap  #创建文件夹
+[root@node1 lvm_data]# mount /dev/myvg/mydata-snap /lvm_snap/  #挂载snap
+[root@node1 lvm_data]# cd /lvm_snap/
+[root@node1 lvm_snap]# ls
+[root@node1 lvm_snap]# tar cf /tmp/mysqlback.tar *  #打包文件到/tmp/mysqlback.tar
+[root@node1 ~]# umount /lvm_snap/  #卸载snap
+[root@node1 ~]# lvremove myvg mydata-snap  #删除snap
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;恢复数据&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[root@node1 lvm_snap]# rm -rf /lvm_data/*
+[root@node1 ~]# service mysqld start    #启动MySQL, 如果是编译安装的应该不能启动(需重新初始化), 如果rpm安装则会重新初始化数据库
+mysql&amp;gt; SHOW DATABASES;   #查看数据库, 数据丢失!
+[root@node1 ~]# cd /lvm_data/
+[root@node1 lvm_data]# rm -rf * #删除所有文件
+[root@node1 lvm_data]# tar xf /tmp/mysqlback.tar     #解压备份数据库到此文件夹 
+[root@node1 lvm_data]# ls  #查看当前的文件
+mysql&amp;gt; SHOW DATABASES;  #数据恢复了
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h5 id=&#34;使用xtrabackup备份&#34;&gt;使用Xtrabackup备份&lt;/h5&gt;
+
+&lt;p&gt;xtrabackup介绍
+Xtrabackup是由percona提供的mysql数据库备份工具，据官方介绍，这也是世界上惟一一款开源的能够对innodb和xtradb数据库进行热备的工具。特点：
+备份过程快速、可靠；
+备份过程不会打断正在执行的事务；
+能够基于压缩等功能节约磁盘空间和流量；
+自动实现备份检验；
+还原速度快；&lt;/p&gt;
+
+&lt;p&gt;xtrabackup实现完全备份
+我们这里使用xtrabackup的前端配置工具innobackupex来实现对数据库的完全备份
+使用innobackupex备份时, 会调用xtrabackup备份所有的InnoDB表, 复制所有关于表结构定义的相关文件(.frm)、以及MyISAM、MERGE、CSV和ARCHIVE表的相关文件, 同时还会备份触发器和数据库配置文件信息相关的文件, 这些文件会被保存至一个以时间命名的目录.&lt;/p&gt;
+
+&lt;p&gt;使用xtrabackup使用InnoDB能够发挥其最大功效, 并且InnoDB的每一张表必须使用单独的表空间,
+我们需要在配置文件中添加 innodb_file_per_table = ON 来开启&lt;/p&gt;
+
+&lt;p&gt;下载安装xtrabackup&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[root@node1 ~]# wget https://www.percona.com/downloads/XtraBackup/Percona-XtraBackup-2.3.4/binary/redhat/6/x86_64/percona-xtrabackup-2.3.4-1.el6.x86_64.rpm   
+[root@node1 ~]# yum localinstall percona-xtrabackup-2.3.4-1.el6.x86_64.rpm   #需要EPEL源
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;备份过程&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[root@node1 ~]# mkdir /extrabackup  #创建备份目录
+[root@node1 ~]# innobackupex --user=root /extrabackup/ #备份数据
+###################提示complete表示成功*********************
+[root@node1 ~]# ls /extrabackup/  #看到备份目录
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;一般情况, 备份完成后, 数据不能用于恢复操作, 因为备份的数据中可能会包含尚未提交
+的事务或已经提交但尚未同步至数据文件中的事务。因此, 此时的数据文件仍不一致, 所以我们需要”准备”一个完全备份&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[root@node1 ~]# innobackupex --apply-log /extrabackup/2016-04-27_07-30-48/  #指定备份文件的目录
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;恢复数据&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[root@node1 ~]# rm -rf /data/*   #删除数据文件
+***不用启动数据库也可以还原*************
+[root@node1 ~]# innobackupex --copy-back /extrabackup/2016-04-27_07-30-48/   #恢复数据, 记清使用方法
+#########我们这里是编译安装的mariadb所以需要做一些操作##########
+[root@node1 data]# killall mysqld
+[root@node1 ~]# chown -R mysql:mysql ./* 
+[root@node1 ~]# ll /data/      #数据恢复
+[root@node1 data]# service mysqld restart
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;增量备份&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[root@node1 ~]# innobackupex --incremental /extrabackup/ --incremental-basedir=/extrabackup/2016-04-27_07-30-48/ 
+[root@node1 ~]# ls /extrabackup/2016-04-27_07-57-22/ #查看备份文件
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;整理增量备份&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[root@node1 ~]# innobackupex --apply-log --redo-only /extrabackup/2016-04-27_07-30-48/
+[root@node1 ~]# innobackupex --apply-log --redo-only /extrabackup/2016-04-27_07-30-48/ --incremental-dir=/extrabackup/2016-04-27_07-5
+7-22/
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;恢复数据&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[root@node1 ~]# rm -rf /data/*   #删除数据
+[root@node1 ~]# innobackupex --copy-back /extrabackup/2016-04-27_07-30-48/     #整理增量备份之后可以直接通过全量备份还原
+[root@node1 ~]# chown -R mysql.mysql /data/
+[root@node1 ~]# ls /data/ -l
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;总结&#34;&gt;总结&lt;/h4&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;备份方法&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;备份速度&lt;/th&gt;
+&lt;th align=&#34;center&#34;&gt;恢复速度&lt;/th&gt;
+&lt;th&gt;便捷性&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;功能&lt;/th&gt;
+&lt;th align=&#34;center&#34;&gt;一般用于&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;cp&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;快&lt;/td&gt;
+&lt;td align=&#34;center&#34;&gt;快&lt;/td&gt;
+&lt;td&gt;一般、灵活性低&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;很弱&lt;/td&gt;
+&lt;td align=&#34;center&#34;&gt;少量数据备份&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;mysqldump&lt;/td&gt;
+&lt;td align=&#34;center&#34;&gt;慢&lt;/td&gt;
+&lt;td&gt;慢&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;一般、可无视存储引擎的差异&lt;/td&gt;
+&lt;td align=&#34;center&#34;&gt;一般&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;lvm2快照&lt;/td&gt;
+&lt;td align=&#34;center&#34;&gt;快&lt;/td&gt;
+&lt;td&gt;快&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;一般、支持几乎热备、速度快&lt;/td&gt;
+&lt;td align=&#34;center&#34;&gt;一般&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;xtrabackup&lt;/td&gt;
+&lt;td align=&#34;center&#34;&gt;较快&lt;/td&gt;
+&lt;td&gt;较快&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;实现innodb热备、对存储引擎有要求&lt;/td&gt;
+&lt;td align=&#34;center&#34;&gt;强大&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+</description>
+      
+    </item>
+    
+    <item>
+      <title>MySQL 日志</title>
+      <link>http://withstars.cn/post/mysql%E6%97%A5%E5%BF%97/</link>
+      <pubDate>Sun, 25 Feb 2018 08:36:54 -0700</pubDate>
+      
+      <guid>http://withstars.cn/post/mysql%E6%97%A5%E5%BF%97/</guid>
+      
+        <description>
+
+&lt;h4 id=&#34;mysql日志类型&#34;&gt;mysql日志类型&lt;/h4&gt;
+
+&lt;p&gt;错误日志：    &amp;ndash;log-err&lt;br /&gt;
+   查询日志：    &amp;ndash;log&lt;br /&gt;
+   慢查询日志:   &amp;ndash;log-slow-queries&lt;br /&gt;
+   更新日志:     &amp;ndash;log-update&lt;br /&gt;
+   二进制日志：  &amp;ndash;log-bin&lt;/p&gt;
+
+&lt;h4 id=&#34;是否启用了日志&#34;&gt;是否启用了日志&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;$ show variables like &#39;log_%&#39;;&lt;/code&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;开启二进制日志-在my-cnf的mysqld下添加&#34;&gt;开启二进制日志,在my.cnf的mysqld下添加&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt;server-id = 1 （在整个Mysql集群中保证唯一）
+log-bin = binlog 
+log-bin-index = binlog.index
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;查看计算机上所有二进制日志文件&#34;&gt;查看计算机上所有二进制日志文件&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;$ show binary logs;&lt;/code&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;查看当前二进制日志文件状态&#34;&gt;查看当前二进制日志文件状态&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;$ show master status;&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;每次重启MySQL服务也会生成一个新的二进制日志文件，相当于二进制日志切换。
+切换二进制日志时，你会看到这些number会不断递增。另外，除了这些二进制日
+志文件外，你会看到还生成了一个DB-Server-bin.index的文件，这个文件中存
+储所有二进制日志文件的清单又称为二进制文件的索引。&lt;/p&gt;
+
+&lt;h4 id=&#34;清除所有的二进制日志文件&#34;&gt;清除所有的二进制日志文件&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;$ reset master;&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;mysql默认二进制日志格式为statement 二进制日志
+分别有STATEMENT、ROW、MIXED三种值
+MySQL 5.7.6之前默认为STATEMENT模式
+MySQL 5.7.7之后默认为ROW模式 这个参数主要影响主从复制
+&lt;code&gt;$ show variables like &#39;binlog_format&#39;;&lt;/code&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;查看二进制文件最大大小&#34;&gt;查看二进制文件最大大小&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;$ show variables like &#39;max_binlog_size&#39;;&lt;/code&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;清除日志&#34;&gt;清除日志&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;$ flush logs;&lt;/code&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;使用mysqlbinlog命令查看二进制日志文件中的的内容&#34;&gt;使用mysqlbinlog命令查看二进制日志文件中的的内容&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;$ mysqlbinlog /var/lib/mysql/DB-Server-bin.000013;&lt;/code&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;解析db-server-bin-000013并将内容输出到test-sql&#34;&gt;解析DB-Server-bin.000013并将内容输出到test.sql&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;$ mysqlbinlog /var/lib/mysql/DB-Server-bin.000013 &amp;gt; test.sql;&lt;/code&gt;&lt;/p&gt;
+</description>
+      
+    </item>
+    
+    <item>
+      <title>MySQL 索引</title>
+      <link>http://withstars.cn/post/mysql%E7%B4%A2%E5%BC%95/</link>
+      <pubDate>Sat, 24 Feb 2018 08:36:54 -0700</pubDate>
+      
+      <guid>http://withstars.cn/post/mysql%E7%B4%A2%E5%BC%95/</guid>
+      
+        <description>
+
+&lt;h4 id=&#34;创建索引&#34;&gt;创建索引&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;CREATE INDEX indexName ON mytable(username(length));&lt;/code&gt;
+&lt;code&gt;ALTER table tableName ADD INDEX indexName(columnName)&lt;/code&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;删除索引&#34;&gt;删除索引&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;DROP INDEX [indexName] ON mytable;&lt;/code&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;显示索引信息&#34;&gt;显示索引信息&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;SHOW INDEX FROM table_name;&lt;/code&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;mysql中能够使用索引的典型场景&#34;&gt;MySQL中能够使用索引的典型场景&lt;/h4&gt;
+
+&lt;ul&gt;
+&lt;li&gt;匹配全值（对索引中的所有列都有等值匹配的条件）&lt;/li&gt;
+&lt;li&gt;匹配值的范围查询(对索引的值能够进行范围查找)&lt;/li&gt;
+&lt;li&gt;匹配最左前缀(仅仅使用索引中的最左边列进行查找)&lt;/li&gt;
+&lt;li&gt;仅仅对索引进行查询(查询的列都在索引的字段中)&lt;/li&gt;
+&lt;li&gt;匹配列前缀(仅仅使用索引中的第一列，并且只包含索引第一列的开头一部分进行查找)&lt;/li&gt;
+&lt;li&gt;能够实现索引匹配部分精确而其它部分进行范围查询&lt;/li&gt;
+&lt;li&gt;如果列名是索引，那么使用where column_name is null 会使用到索引&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&#34;存在索引但不能使用索引的典型场景&#34;&gt;存在索引但不能使用索引的典型场景&lt;/h4&gt;
+
+&lt;ul&gt;
+&lt;li&gt;以%开头的LIKE查询不能使用B-Tree索引&lt;/li&gt;
+&lt;li&gt;数据类型出现隐式转换的时候也不能使用索引(特别是当列类型是字符串，一定要在where条件中把字符常量用引号括起来)&lt;/li&gt;
+&lt;li&gt;符合索引的情况下，假如查询条件不包含索引的最左部分，即不满足最左原则，是不会使用复合索引的&lt;/li&gt;
+&lt;li&gt;如果MySQL估计使用索引比不使用索引慢，就不会使用索引&lt;/li&gt;
+&lt;li&gt;用or分割开的条件，如果or前的条件中的列有索引，而后面的列没有索引，那么涉及的索引不会被用到&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+      
+    </item>
+    
+    <item>
+      <title>关于</title>
+      <link>http://withstars.cn/about/</link>
+      <pubDate>Mon, 01 Jan 2018 08:36:54 -0700</pubDate>
+      
+      <guid>http://withstars.cn/about/</guid>
+      
+        <description>&lt;h5 align = &#34;center&#34;&gt;天高地迥，觉宇宙之无穷；&lt;/h5&gt;
+&lt;h5 align = &#34;center&#34;&gt;兴尽悲来，识盈虚之有数。&lt;/h5&gt;
+&lt;h5 align = &#34;center&#34;&gt;望长安于日下，目吴会于云间。&lt;/h5&gt;
+&lt;h5 align = &#34;center&#34;&gt;地势极而南溟深，天柱高而北辰远。&lt;/h5&gt;
+&lt;h5 align = &#34;center&#34;&gt;关山难越，谁悲失路之人；&lt;/h5&gt;
+&lt;h5 align = &#34;center&#34;&gt;萍水相逢，尽是他乡之客。&lt;/h5&gt;
+</description>
+      
+    </item>
+    
+  </channel>
+</rss>
