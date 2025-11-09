@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>温如</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h2>洞见灵感</h2>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#home" class="nav-link">首页</a></li>
+                <li><a href="#articles" class="nav-link">文章</a></li>
+                <li><a href="#about" class="nav-link">关于</a></li>
+                <li><a href="#contact" class="nav-link">联系</a></li>
+            </ul>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">分享洞见与灵感</h1>
+                <p class="hero-subtitle">探索AI前沿、产品设计、AIGC与数据洞察的无限可能</p>
+                <div class="hero-tags">
+                    <span class="tag">#AI前沿</span>
+                    <span class="tag">#产品设计</span>
+                    <span class="tag">#AIGC</span>
+                    <span class="tag">#数据洞察</span>
+                </div>
+                <div class="hero-actions">
+                    <a href="#articles" class="btn btn-primary">阅读文章</a>
+                    <a href="#about" class="btn btn-secondary">了解更多</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="floating-card">
+                    <i class="fas fa-lightbulb"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <h2 class="section-title">关于我</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <p>欢迎来到我的个人博客！我热衷于分享在技术、设计和数据领域的洞见与灵感。通过这个平台，我希望能够与更多志同道合的朋友交流思想，共同成长。</p>
+                    <p>专注于人工智能前沿技术、产品设计与用户体验、AIGC应用、数据驱动的商业洞察等领域，致力于将复杂的技术概念转化为实用的解决方案。</p>
+                </div>
+                <div class="skills">
+                    <div class="skill-item">
+                        <i class="fas fa-robot"></i>
+                        <h3>AI前沿</h3>
+                        <p>深度学习、机器学习、大语言模型</p>
+                    </div>
+                    <div class="skill-item">
+                        <i class="fas fa-palette"></i>
+                        <h3>产品设计</h3>
+                        <p>用户体验设计、产品策略、创新思维</p>
+                    </div>
+                    <div class="skill-item">
+                        <i class="fas fa-magic"></i>
+                        <h3>AIGC</h3>
+                        <p>生成式AI、内容创作、智能工具</p>
+                    </div>
+                    <div class="skill-item">
+                        <i class="fas fa-chart-line"></i>
+                        <h3>数据洞察</h3>
+                        <p>数据分析、可视化、商业智能</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Articles Section -->
+    <section id="articles" class="articles">
+        <div class="container">
+            <h2 class="section-title">最新文章</h2>
+
+            <!-- Article Categories -->
+            <div class="article-categories">
+                <button class="category-btn active" data-category="all">全部</button>
+                <button class="category-btn" data-category="ai">AI前沿</button>
+                <button class="category-btn" data-category="design">产品设计</button>
+                <button class="category-btn" data-category="aigc">AIGC</button>
+                <button class="category-btn" data-category="data">数据洞察</button>
+            </div>
+
+            <!-- Articles Grid -->
+            <div class="articles-grid" id="articlesGrid">
+                <!-- 示例文章1 -->
+                <article class="article-card" data-category="ai">
+                    <div class="article-image">
+                        <div class="article-placeholder">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                    </div>
+                    <div class="article-content">
+                        <div class="article-meta">
+                            <span class="article-category">AI前沿</span>
+                            <span class="article-date">2024-01-15</span>
+                        </div>
+                        <h3 class="article-title">大语言模型的未来发展趋势</h3>
+                        <p class="article-excerpt">探讨GPT、Claude等大语言模型的技术演进路径，以及在各个行业的应用前景...</p>
+                        <a href="#" class="article-link">阅读全文 <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </article>
+
+                <!-- 示例文章2 -->
+                <article class="article-card" data-category="design">
+                    <div class="article-image">
+                        <div class="article-placeholder">
+                            <i class="fas fa-pencil-ruler"></i>
+                        </div>
+                    </div>
+                    <div class="article-content">
+                        <div class="article-meta">
+                            <span class="article-category">产品设计</span>
+                            <span class="article-date">2024-01-12</span>
+                        </div>
+                        <h3 class="article-title">以用户为中心的产品设计思维</h3>
+                        <p class="article-excerpt">从用户需求出发，运用设计思维方法论，打造真正解决问题的产品体验...</p>
+                        <a href="#" class="article-link">阅读全文 <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </article>
+
+                <!-- 示例文章3 -->
+                <article class="article-card" data-category="aigc">
+                    <div class="article-image">
+                        <div class="article-placeholder">
+                            <i class="fas fa-paint-brush"></i>
+                        </div>
+                    </div>
+                    <div class="article-content">
+                        <div class="article-meta">
+                            <span class="article-category">AIGC</span>
+                            <span class="article-date">2024-01-10</span>
+                        </div>
+                        <h3 class="article-title">AIGC时代的内容创作革命</h3>
+                        <p class="article-excerpt">生成式AI如何改变内容创作行业，以及创作者如何适应这一趋势...</p>
+                        <a href="#" class="article-link">阅读全文 <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </article>
+
+                <!-- 示例文章4 -->
+                <article class="article-card" data-category="data">
+                    <div class="article-image">
+                        <div class="article-placeholder">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                    </div>
+                    <div class="article-content">
+                        <div class="article-meta">
+                            <span class="article-category">数据洞察</span>
+                            <span class="article-date">2024-01-08</span>
+                        </div>
+                        <h3 class="article-title">数据驱动决策的最佳实践</h3>
+                        <p class="article-excerpt">如何建立有效的数据分析体系，让数据真正为业务决策提供支持...</p>
+                        <a href="#" class="article-link">阅读全文 <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </article>
+            </div>
+
+            <!-- Load More Button -->
+            <div class="load-more">
+                <button class="btn btn-outline">加载更多文章</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter Section -->
+    <section class="newsletter">
+        <div class="container">
+            <div class="newsletter-content">
+                <h2>订阅我的博客</h2>
+                <p>第一时间获取最新文章和洞见分享</p>
+                <form class="newsletter-form">
+                    <input type="email" placeholder="输入您的邮箱地址" required>
+                    <button type="submit" class="btn btn-primary">订阅</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2 class="section-title">联系我</h2>
+            <div class="contact-content">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <h3>邮箱</h3>
+                            <p>hello@blog.com</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fab fa-twitter"></i>
+                        <div>
+                            <h3>社交媒体</h3>
+                            <p>@insights_blog</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fab fa-github"></i>
+                        <div>
+                            <h3>GitHub</h3>
+                            <p>github.com/insights</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="contact-form">
+                    <form>
+                        <div class="form-group">
+                            <input type="text" placeholder="您的姓名" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" placeholder="您的邮箱" required>
+                        </div>
+                        <div class="form-group">
+                            <textarea placeholder="留言内容" rows="5" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">发送留言</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <h3>分享洞见与灵感</h3>
+                </div>
+                <div class="footer-links">
+                    <div class="link-group">
+                        <h4>导航</h4>
+                        <ul>
+                            <li><a href="#home">首页</a></li>
+                            <li><a href="#articles">文章</a></li>
+                            <li><a href="#about">关于</a></li>
+                            <li><a href="#contact">联系</a></li>
+                        </ul>
+                    </div>
+                    <div class="link-group">
+                        <h4>分类</h4>
+                        <ul>
+                            <li><a href="#">AI前沿</a></li>
+                            <li><a href="#">产品设计</a></li>
+                            <li><a href="#">AIGC</a></li>
+                            <li><a href="#">数据洞察</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="footer-social">
+                    <h4>关注我</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
+                        <a href="#"><i class="fab fa-medium"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
